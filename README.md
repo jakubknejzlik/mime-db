@@ -34,12 +34,17 @@ var db = require('mime-db');
 
 // grab data on .js files
 var data = db['application/javascript'];
+
+// grab mime types for extension
+var type = db.extension['js'];
 ```
 
 ## Data Structure
 
-The JSON file is a map lookup for lowercased mime types.
-Each mime type has the following properties:
+### db.json
+
+The JSON file is a map lookup for lower-cased mime types. Each mime type has
+the following properties:
 
 - `.source` - where the mime type is defined.
     If not set, it's probably a custom media type.
@@ -50,6 +55,12 @@ Each mime type has the following properties:
 - `.charset` - the default charset associated with this type, if any.
 
 If unknown, every property could be `undefined`.
+
+### db-ext.json
+
+The JSON file is a map lookup for lower-cased file extensions. Each file
+extension is an array with the list of lower-cased mime types in order of
+preference.
 
 ## Contributing
 

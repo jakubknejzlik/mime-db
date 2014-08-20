@@ -1,14 +1,15 @@
 
 var db = {}
+var ext = {}
 
 // initialize with all the IANA types
-addData(db, require('../src/iana.json'), 'iana')
+addData(db, ext, require('../src/iana.json'), 'iana')
 
 // add the mime extensions from Apache
-addData(db, require('../src/apache.json'), 'apache')
+addData(db, ext, require('../src/apache.json'), 'apache')
 
 // now add all our custom data
-addData(db, require('../src/custom.json'))
+addData(db, ext, require('../src/custom.json'))
 
 // finally, all custom suffix defaults
 var mime = require('../src/custom-suffix.json')
@@ -27,11 +28,12 @@ Object.keys(mime).forEach(function (suffix) {
 
 // write db
 require('./lib/write-db')('db.json', db)
+require('./lib/write-db-ext')('db-ext.json', ext)
 
 /**
  * Add mime data to the db, marked as a given source.
  */
-function addData(db, mime, source) {
+function addData(db, ext, mime, source) {
   Object.keys(mime).forEach(function (key) {
     var data = mime[key]
     var type = key.toLowerCase()
@@ -41,9 +43,26 @@ function addData(db, mime, source) {
     setValue(obj, 'charset', data.charset)
     setValue(obj, 'compressible', data.compressible)
 
-    // append new extensions
-    appendExtensions(obj, data.extensions)
+    if (data.extensions) {
+      // append new extensions
+      appendExtensions(obj, data.extensions)
+
+      // add extensions to extension lookup
+      addExtensionData(ext, type, data.extensions)
+    }
   })
+}
+
+/**
+ * Add extension data to the extension db.
+ */
+function addExtensionData(db, type, extensions) {
+  for (var i = 0; i < extensions.length; i++) {
+    var extension = extensions[i]
+
+    // add type to the extension entry
+    ext[extension] = (ext[extension] || []).concat(type)
+  }
 }
 
 /**
@@ -63,10 +82,6 @@ function appendExtension(obj, extension) {
  * Append extensions to an object.
  */
 function appendExtensions(obj, extensions) {
-  if (!extensions) {
-    return
-  }
-
   for (var i = 0; i < extensions.length; i++) {
     var extension = extensions[i]
 
